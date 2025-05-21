@@ -6,7 +6,7 @@ import os
 #Console logging
 import logging
 
-#==========================
+#=============================================================================================
 def main():
     # Get the default gateway
     gw = get_default_gateway()
@@ -68,16 +68,12 @@ def main():
                     f.write('')  # Clear the log file
                     logging.info("Log file cleared.")
     except Exception as e:
-        cleanup()
-        print(f"An error occurred: {e}")
         logging.error(f"An error occurred: {e}")
     except KeyboardInterrupt:
-        # Cleanup GPIO on exit
-        cleanup()
         logging.info("Exiting program.")
-        #print("Exiting program.")
-        pass
         
-#===========================
+    cleanup()
+        
+#=============================================================================================
 if __name__ == "__main__":
     main()
