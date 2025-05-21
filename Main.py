@@ -5,7 +5,6 @@ import os
 
 #Console logging
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 #==========================
 def main():
@@ -13,6 +12,11 @@ def main():
     gw = get_default_gateway()
     print(f"Default gateway: {gw}")
     
+    #Initialize logging
+    log_file = 'network_check.log'
+    logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.getLogger().setLevel(logging.INFO)
+
     # Set up the GPIO pin
     pin_setup()
     
@@ -37,23 +41,28 @@ def main():
                 
                 # Send signal to GPIO pin to drop power
                 sendsignal()
-                time.sleep(60*3) # Wait for 3 minutes before checking again
+                
+                # If you perform the check immediately after sending the signal,
+                # you may get a false positive because the network may not be back up yet.
+                # So, wait for a few minutes before checking again.
+                time.sleep(60*3) 
                 _, internet_ok_recheck = check_network(gw)
                 if internet_ok_recheck:
                     print("✅ Internet is back up.")
                 else:
                     print("❌ Internet is still down.")           
+                    
             elif not lan_ok:
-                #print("❌ Cannot reach LAN gateway; you may be offline entirely.")
                 logging.info("Cannot reach LAN gateway; you may be offline entirely.")
+                
             else:
                 # Should not reach here because this would imply that
                 # the LAN is down but the Internet is up, which is not possible
                 # in a typical home network setup.  But let's log it just in case.
                 logging.info("Unexpected network state.")
+                
             #Clear the log file if it gets too large
-            log_file = 'network_check.log'
-            max_size = 1024 * 1024 * 5  # 5 MB
+            max_size = 1024 * 1024 * 500  # 500 MB
             if os.path.exists(log_file) and os.path.getsize(log_file) > max_size:
                 with open(log_file, 'w') as f:
                     f.write('')  # Clear the log file
