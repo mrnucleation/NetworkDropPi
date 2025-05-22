@@ -1,5 +1,6 @@
 from NetworkCheck import check_network, can_connect, get_default_gateway
 from Pi_Control import pin_setup, sendsignal, cleanup
+from ASUSReboot import load_config, reboot_router
 import time
 import os
 
@@ -19,6 +20,8 @@ def main():
 
     # Set up the GPIO pin
     pin_setup()
+    
+    router_info = load_config('config.yaml')
     
     
     try:
@@ -41,6 +44,10 @@ def main():
                 
                 # Send signal to GPIO pin to drop power
                 sendsignal()
+                time.sleep(15)  # Wait for 15 seconds before rebooting
+                # Reboot the router
+                logging.info("Rebooting router...")
+                reboot_router(router_info)
                 
                 # If you perform the check immediately after sending the signal,
                 # you may get a false positive because the network may not be back up yet.
