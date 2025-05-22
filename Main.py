@@ -27,7 +27,7 @@ def main():
     try:
         while True:
             # Check every x seconds to avoid flooding the network
-            time.sleep(30)
+            time.sleep(60)
             # Check the network status  
             lan_ok, internet_ok = check_network(gw)
             
@@ -53,14 +53,13 @@ def main():
                 # If you perform the check immediately after sending the signal,
                 # you may get a false positive because the network may not be back up yet.
                 # So, wait for a few minutes before checking again.
-                time.sleep(60*3) 
                 while True:
+                    time.sleep(60*3) 
                     lan_ok_recheck, internet_ok_recheck = check_network(gw)
                     if internet_ok_recheck and lan_ok_recheck:
                         logging.info("Internet is back up.")
                         break
                     print("❌ Internet is still down.")           
-                    time.sleep(30)  # Check every 30 seconds
                     
             elif not lan_ok:
                 logging.info("Cannot reach LAN gateway; you may be offline entirely.")

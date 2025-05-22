@@ -21,6 +21,7 @@ def reboot_router(json_input):
 
     try:
         logging.info(f"Connecting to {hostname}...")
+        print(f"Connecting to {hostname}...")
         client.connect(hostname, username=username, password=password, timeout=2)
         stdin, stdout, stderr = client.exec_command("reboot")
         logging.info("Reboot command sent.")

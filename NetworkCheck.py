@@ -44,6 +44,11 @@ def can_connect(host: str, port: int, timeout: float = 1.0) -> bool:
 def check_network(gw):
     lan_ok = can_connect(gw, 80)           # HTTP port on your router
     internet_ok = can_connect("8.8.8.8", 53)  # DNS port on Google’s public DNS
+    if not internet_ok:
+        #Check backup DNS server incase the primary is down
+        second_internet_ok = can_connect("8.8.4.4", 53)  # DNS port on Google’s public DNS
+        if second_internet_ok:
+            internet_ok = True
     return lan_ok, internet_ok
 #========================================================================
 if __name__ == "__main__":
