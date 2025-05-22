@@ -3,6 +3,7 @@ import re
 import socket
 import subprocess
 
+#========================================================================
 def get_default_gateway():
     """
     Return the default gateway IP by shelling out:
@@ -31,8 +32,7 @@ def get_default_gateway():
     if not m:
         raise RuntimeError("Could not parse default gateway")
     return m.group(1)
-
-
+#========================================================================
 def can_connect(host: str, port: int, timeout: float = 1.0) -> bool:
     """Try opening a TCP socket to (host, port)."""
     try:
@@ -40,23 +40,11 @@ def can_connect(host: str, port: int, timeout: float = 1.0) -> bool:
             return True
     except OSError:
         return False
-
-
+#========================================================================
 def check_network(gw):
-
-
     lan_ok = can_connect(gw, 80)           # HTTP port on your router
     internet_ok = can_connect("8.8.8.8", 53)  # DNS port on Google’s public DNS
-
-    #if lan_ok and not internet_ok:
-    #    print("✅ LAN is up, but Internet is down.")
-    #elif lan_ok and internet_ok:
-    #    print("✅ Both LAN and Internet are reachable.")
-    #elif not lan_ok:
-    #    print("❌ Cannot reach LAN gateway; you may be offline entirely.")
-    #else:
-    #    print("❓ Unexpected network state.")
     return lan_ok, internet_ok
-
+#========================================================================
 if __name__ == "__main__":
     check_network(get_default_gateway())

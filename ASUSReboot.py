@@ -20,7 +20,8 @@ def reboot_router(json_input):
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     try:
-        client.connect(hostname, username=username, password=password, timeout=10)
+        logging.info(f"Connecting to {hostname}...")
+        client.connect(hostname, username=username, password=password, timeout=2)
         stdin, stdout, stderr = client.exec_command("reboot")
         logging.info("Reboot command sent.")
         logging.info(stdout.read().decode())
