@@ -1,18 +1,18 @@
 import paramiko
-import yaml
+import json
 import logging
 
 #========================================================================    
-def load_config(yaml_path):
-    # Load the YAML configuration file
-    with open(yaml_path, 'r') as file:
-        config = yaml.safe_load(file)
+def load_config(json_path):
+    # Load the JSON configuration file
+    with open(json_path, 'r') as f:
+        config = json.load(f)
     return config
 #========================================================================    
-def reboot_router(yaml_input):
-    hostname = yaml_input['hostname']
-    username = yaml_input['username']
-    password = yaml_input['password']
+def reboot_router(json_input):
+    hostname = json_input['hostname']
+    username = json_input['username']
+    password = json_input['password']
 
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())

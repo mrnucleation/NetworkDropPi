@@ -53,11 +53,13 @@ def main():
                 # you may get a false positive because the network may not be back up yet.
                 # So, wait for a few minutes before checking again.
                 time.sleep(60*3) 
-                _, internet_ok_recheck = check_network(gw)
-                if internet_ok_recheck:
-                    print("✅ Internet is back up.")
-                else:
+                while True:
+                    lan_ok_recheck, internet_ok_recheck = check_network(gw)
+                    if internet_ok_recheck and lan_ok_recheck:
+                        logging.info("Internet is back up.")
+                        break
                     print("❌ Internet is still down.")           
+                    time.sleep(30)  # Check every 30 seconds
                     
             elif not lan_ok:
                 logging.info("Cannot reach LAN gateway; you may be offline entirely.")
