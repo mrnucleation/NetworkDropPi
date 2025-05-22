@@ -21,7 +21,7 @@ def main():
     # Set up the GPIO pin
     pin_setup()
     
-    router_info = load_config('config.yaml')
+    router_info = load_config('config.json')
     
     
     try:
