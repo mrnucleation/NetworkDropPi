@@ -37,9 +37,9 @@ def main():
             logging.info(f"Current time: {curtime}")
             
             if lan_ok and internet_ok:
-                #logging.info("Both LAN and Internet are reachable.")
+                logging.info("Both LAN and Internet are reachable.")
                 #print("✅ Both LAN and Internet are reachable.")
-                pass
+                #pass
                 
             elif lan_ok and not internet_ok:
                 #print("LAN is up, but Internet is down.")
