@@ -15,6 +15,8 @@ def main():
     
     #Initialize logging
     log_file = 'network_check.log'
+    if os.path.exists(log_file):
+        os.remove(log_file)
     logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     logging.getLogger().setLevel(logging.INFO)
 
@@ -45,7 +47,7 @@ def main():
                 
                 # Send signal to GPIO pin to drop power
                 sendsignal()
-                time.sleep(15)  # Wait for 15 seconds before rebooting
+                time.sleep(4)  # Wait for 7 seconds before rebooting
                 # Reboot the router
                 logging.info("Rebooting router...")
                 reboot_router(router_info)
@@ -54,7 +56,7 @@ def main():
                 # you may get a false positive because the network may not be back up yet.
                 # So, wait for a few minutes before checking again.
                 while True:
-                    time.sleep(60*3) 
+                    time.sleep(60*2) # Wait for 2 minutes before checking again 
                     lan_ok_recheck, internet_ok_recheck = check_network(gw)
                     if internet_ok_recheck and lan_ok_recheck:
                         logging.info("Internet is back up.")
