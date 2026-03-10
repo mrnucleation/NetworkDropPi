@@ -3,9 +3,36 @@ from Pi_Control import pin_setup, sendsignal, cleanup
 from ASUSReboot import load_config, reboot_router
 import time
 import os
+from datetime import datetime, timezone, timedelta
 
 #Console logging
 import logging
+
+# Fixed PST offset (UTC-8). Does not adjust for daylight saving time.
+PST = timezone(timedelta(hours=-8))
+DAILY_REBOOT_HOUR = 4  # 4 AM PST
+
+#=============================================================================================
+def is_daily_reboot_due(last_reboot_date):
+    """Return True if we've passed the reboot hour today (PST) and haven't rebooted yet."""
+    now_pst = datetime.now(PST)
+    return now_pst.hour >= DAILY_REBOOT_HOUR and last_reboot_date != now_pst.date()
+
+def reboot_and_wait_for_recovery(router_info, gw, reason):
+    """Drop power via GPIO, reboot the router, and block until connectivity is restored."""
+    logging.info(f"Initiating reboot sequence — reason: {reason}")
+    sendsignal()
+    time.sleep(4)
+    logging.info("Rebooting router...")
+    reboot_router(router_info)
+
+    while True:
+        time.sleep(60 * 2)
+        lan_ok, internet_ok = check_network(gw)
+        if lan_ok and internet_ok:
+            logging.info(f"Internet is back up after reboot ({reason}).")
+            return
+        logging.info(f"Internet still down after reboot ({reason}), waiting...")
 
 #=============================================================================================
 def main():
@@ -24,12 +51,26 @@ def main():
     pin_setup()
     
     router_info = load_config('config.json')
-    
-    
+
+    # Seed last_reboot_date so we don't fire immediately on startup if it's
+    # already past the reboot hour. The first real daily reboot will happen
+    # the *next* time the reboot hour arrives (or tomorrow if already past).
+    now_pst = datetime.now(PST)
+    last_reboot_date = now_pst.date() if now_pst.hour >= DAILY_REBOOT_HOUR else None
+
     try:
         while True:
             # Check every x seconds to avoid flooding the network
             time.sleep(60)
+
+            # --- Scheduled daily reboot (buffered) ---
+            # Checked every iteration so that if we were stuck in a recovery
+            # loop when the reboot hour passed, it fires as soon as we return.
+            if is_daily_reboot_due(last_reboot_date):
+                reboot_and_wait_for_recovery(router_info, gw, "scheduled daily reboot")
+                last_reboot_date = datetime.now(PST).date()
+                continue  # re-enter the loop for a fresh network check
+
             # Check the network status  
             lan_ok, internet_ok = check_network(gw)
             
@@ -38,30 +79,10 @@ def main():
             
             if lan_ok and internet_ok:
                 logging.info("Both LAN and Internet are reachable.")
-                #print("✅ Both LAN and Internet are reachable.")
-                #pass
                 
             elif lan_ok and not internet_ok:
-                #print("LAN is up, but Internet is down.")
                 logging.info("LAN is up, but Internet is down.")
-                
-                # Send signal to GPIO pin to drop power
-                sendsignal()
-                time.sleep(4)  # Wait for 7 seconds before rebooting
-                # Reboot the router
-                logging.info("Rebooting router...")
-                reboot_router(router_info)
-                
-                # If you perform the check immediately after sending the signal,
-                # you may get a false positive because the network may not be back up yet.
-                # So, wait for a few minutes before checking again.
-                while True:
-                    time.sleep(60*2) # Wait for 2 minutes before checking again 
-                    lan_ok_recheck, internet_ok_recheck = check_network(gw)
-                    if internet_ok_recheck and lan_ok_recheck:
-                        logging.info("Internet is back up.")
-                        break
-                    print("❌ Internet is still down.")           
+                reboot_and_wait_for_recovery(router_info, gw, "internet outage detected")
                     
             elif not lan_ok:
                 logging.info("Cannot reach LAN gateway; you may be offline entirely.")
